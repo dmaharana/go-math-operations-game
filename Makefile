@@ -18,16 +18,16 @@ server: $(SERVER_OUTPUT_DIR)/$(SERVER_EXECUTABLE) $(SERVER_OUTPUT_DIR)/$(SERVER_
 
 $(SERVER_OUTPUT_DIR)/$(SERVER_EXECUTABLE):
 	mkdir -p $(SERVER_OUTPUT_DIR)
-	cd $(SERVER_DIR) && GOOS=linux GOARCH=amd64 go build -o $(SERVER_OUTPUT_DIR)/$(SERVER_EXECUTABLE)
+	cd $(SERVER_DIR) && GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o $(SERVER_OUTPUT_DIR)/$(SERVER_EXECUTABLE)
 
 $(SERVER_OUTPUT_DIR)/$(SERVER_EXECUTABLE_WINDOWS):
 	mkdir -p $(SERVER_OUTPUT_DIR)
-	cd $(SERVER_DIR) && GOOS=windows GOARCH=amd64 go build -o $(SERVER_OUTPUT_DIR)/$(SERVER_EXECUTABLE_WINDOWS)
+	cd $(SERVER_DIR) && GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o $(SERVER_OUTPUT_DIR)/$(SERVER_EXECUTABLE_WINDOWS)
 
 
 ui:
 	rm -rf $(UI_DIST_DIR) $(SERVER_DIST_DIR)
-	cd $(UI_DIR) && npm run build
+	cd $(UI_DIR) && npm install && npm run build
 	cp -r $(UI_DIST_DIR) $(SERVER_DIR)
 
 clean:
