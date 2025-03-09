@@ -5,7 +5,6 @@ import (
 	"flag"
 	"io/fs"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
@@ -21,7 +20,9 @@ const buildDir = "dist"
 var staticFS embed.FS
 
 func main() {
-	port := flag.Int("port", 8080, "port number to listen on")
+	var port string
+	flag.StringVar(&port, "port", "8080", "port")
+	flag.StringVar(&port, "p", "8080", "port")
 	flag.Parse()
 
 	router := gin.Default()
@@ -33,7 +34,7 @@ func main() {
 	staticFileFS := http.FS(staticFileSubDir)
 	router.Use(static.Serve("/", embedFS{staticFileFS}))
 
-	router.Run(":" + strconv.Itoa(*port))
+	router.Run(":" + port)
 }
 
 func (e embedFS) Exists(prefix string, name string) bool {
