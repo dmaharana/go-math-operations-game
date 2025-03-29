@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import ResultsHistory from "./ResultsHistory";
 import GameControls from "./GameControls";
 import GameSidebar from "./GameSidebar";
 import GameTable from "./GameTable";
@@ -29,12 +30,15 @@ const MathOperationsGame = () => {
     averageTimePerAnswer: 0,
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("game");
   const [operation, setOperation] = useState("addition"); // addition, subtraction, multiplication, division
   const [difficulty, setDifficulty] = useState("medium"); // easy, medium, hard
   const [gridSize, setGridSize] = useState(() => {
     // Default to 10x1 for mobile, 10x10 for desktop
     return window.innerWidth < 768 ? { rows: 10, cols: 1 } : { rows: 10, cols: 10 };
   });
+  const [resultsHistory, setResultsHistory] = useState([]);                                                                                   
+
 
   const isInputDisabled = gameState !== "playing";
 
@@ -143,13 +147,37 @@ const MathOperationsGame = () => {
       setGameState("paused");
     }
   };
+	
+  // Load results from localStorage on component mount                                                                                        
+  useEffect(() => {                                                                                                                           
+    const savedResults = localStorage.getItem('mathGameResults');                                                                             
+    if (savedResults) {                                                                                                                       
+      setResultsHistory(JSON.parse(savedResults));                                                                                            
+    }                                                                                                                                         
+  }, []);
 
   const stopGame = () => {
     if (gameState === "playing" || gameState === "paused") {
       clearInterval(timerInterval);
       setTimerInterval(null);
       setGameState("completed");
-      setResults(calculateResults(answers, numbers, operation, timer, calculateExpectedAnswer));
+             
+      const newResults = calculateResults(answers, numbers, operation, timer, calculateExpectedAnswer);                                       
+      setResults(newResults);                                                                                                                 
+                                                                                                                                              
+      // Save to history                                                                                                                      
+      const historyEntry = {                                                                                                                  
+        ...newResults,                                                                                                                        
+        operation,                                                                                                                            
+        difficulty,                                                                                                                           
+        gridSize,                                                                                                                             
+        timestamp: new Date().toISOString()                                                                                                   
+      };                                                                                                                                      
+                                                                                                                                              
+      // Keep only the most recent 100 results
+      const updatedHistory = [...resultsHistory, historyEntry].slice(-100);
+      setResultsHistory(updatedHistory);                                                                                                      
+      localStorage.setItem('mathGameResults', JSON.stringify(updatedHistory));
     }
   };
 
@@ -451,7 +479,23 @@ const MathOperationsGame = () => {
             totals for rows, columns, and the entire grid!
           </div>
 
-          <div className="flex items-start gap-4">
+          <div className="flex mb-4 border-b">
+            <button
+              onClick={() => setActiveTab("game")}
+              className={`px-4 py-2 font-medium ${activeTab === "game" ? "border-b-2 border-blue-500 text-blue-600" : "text-gray-500"}`}
+            >
+              Game
+            </button>
+            <button
+              onClick={() => setActiveTab("history")}
+              className={`px-4 py-2 font-medium ${activeTab === "history" ? "border-b-2 border-blue-500 text-blue-600" : "text-gray-500"}`}
+            >
+              Performance History
+            </button>
+          </div>
+
+          {activeTab === "game" ? (
+            <div className="flex items-start gap-4">
             <GameTable
               numbers={numbers}
               operation={operation}
@@ -498,9 +542,12 @@ const MathOperationsGame = () => {
                 </button>
               ))}
             </div>
-          </div>
+            </div>
+          ) : (
+            <ResultsHistory resultsHistory={resultsHistory} />
+          )}
 
-          {gameState === "completed" && (
+          {activeTab === "game" && gameState === "completed" && (
             <ResultsSummary results={results} formatTime={formatTime} />
           )}
         </div>
