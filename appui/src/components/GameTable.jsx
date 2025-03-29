@@ -20,7 +20,7 @@ const GameTable = ({
 }) => {
   return (
     <div className="overflow-x-auto rounded shadow">
-      <table className="w-full border-collapse bg-white">
+      <table className="w-full border-collapse bg-white max-w-xs mx-auto md:max-w-none">
         <thead>
           <tr>
             <th className="border p-2 bg-gray-100">
@@ -36,9 +36,11 @@ const GameTable = ({
                 {num}
               </th>
             ))}
-            <th className="border p-2 text-center bg-gray-200 font-bold">
-              Total
-            </th>
+            {numbers.colHeaders.length > 1 && (
+              <th className="border p-2 text-center bg-gray-200 font-bold">
+                Total
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -77,32 +79,34 @@ const GameTable = ({
                   />
                 </td>
               ))}
-              <td
-                className={`border p-2 ${getCellStyle(
-                  `row-total-${rowIndex}`,
-                  calculateRowTotal(rowIndex)
-                )}`}
-              >
-                <CellInput
-                  cellId={`row-total-${rowIndex}`}
-                  value={answers[`row-total-${rowIndex}`] || ""}
-                  onChange={(e) =>
-                    handleInputChange(e, `row-total-${rowIndex}`)
-                  }
-                  onFocus={() =>
-                    setSelectedCell({
-                      row: rowIndex,
-                      col: numbers.colHeaders.length,
-                    })
-                  }
-                  disabled={isInputDisabled}
-                  className="w-full h-full p-1 text-center focus:outline-none bg-transparent font-bold"
-                  placeholder="Total?"
-                  inputRef={(el) =>
-                    (inputRefs.current[`row-total-${rowIndex}`] = el)
-                  }
-                />
-              </td>
+              {numbers.colHeaders.length > 1 && (
+                <td
+                  className={`border p-2 ${getCellStyle(
+                    `row-total-${rowIndex}`,
+                    calculateRowTotal(rowIndex)
+                  )}`}
+                >
+                  <CellInput
+                    cellId={`row-total-${rowIndex}`}
+                    value={answers[`row-total-${rowIndex}`] || ""}
+                    onChange={(e) =>
+                      handleInputChange(e, `row-total-${rowIndex}`)
+                    }
+                    onFocus={() =>
+                      setSelectedCell({
+                        row: rowIndex,
+                        col: numbers.colHeaders.length,
+                      })
+                    }
+                    disabled={isInputDisabled}
+                    className="w-full h-full p-1 text-center focus:outline-none bg-transparent font-bold"
+                    placeholder="Total?"
+                    inputRef={(el) =>
+                      (inputRefs.current[`row-total-${rowIndex}`] = el)
+                    }
+                  />
+                </td>
+              )}
             </tr>
           ))}
           <tr>
@@ -138,28 +142,30 @@ const GameTable = ({
                 />
               </td>
             ))}
-            <td
-              className={`border p-2 ${getCellStyle(
-                "grand-total",
-                calculateGrandTotal()
-              )}`}
-            >
-              <CellInput
-                cellId="grand-total"
-                value={answers["grand-total"] || ""}
-                onChange={(e) => handleInputChange(e, "grand-total")}
-                onFocus={() =>
-                  setSelectedCell({
-                    row: numbers.rowHeaders.length,
-                    col: numbers.colHeaders.length,
-                  })
-                }
-                disabled={isInputDisabled}
-                className="w-full h-full p-1 text-center focus:outline-none bg-transparent font-bold"
-                placeholder="Grand Total?"
-                inputRef={(el) => (inputRefs.current["grand-total"] = el)}
-              />
-            </td>
+            {numbers.colHeaders.length > 1 && (
+              <td
+                className={`border p-2 ${getCellStyle(
+                  "grand-total",
+                  calculateGrandTotal()
+                )}`}
+              >
+                <CellInput
+                  cellId="grand-total"
+                  value={answers["grand-total"] || ""}
+                  onChange={(e) => handleInputChange(e, "grand-total")}
+                  onFocus={() =>
+                    setSelectedCell({
+                      row: numbers.rowHeaders.length,
+                      col: numbers.colHeaders.length,
+                    })
+                  }
+                  disabled={isInputDisabled}
+                  className="w-full h-full p-1 text-center focus:outline-none bg-transparent font-bold"
+                  placeholder="Grand Total?"
+                  inputRef={(el) => (inputRefs.current["grand-total"] = el)}
+                />
+              </td>
+            )}
           </tr>
         </tbody>
       </table>

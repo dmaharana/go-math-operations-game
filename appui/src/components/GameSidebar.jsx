@@ -7,6 +7,8 @@ const GameSidebar = ({
   changeOperation,
   difficulty,
   changeDifficulty,
+  gridSize,
+  changeGridSize,
 }) => {
   return (
     <div
@@ -14,7 +16,7 @@ const GameSidebar = ({
         sidebarOpen ? "w-64" : "w-0"
       } bg-gray-800 text-white overflow-hidden fixed h-full z-10 md:relative`}
     >
-      <div className="p-4">
+      <div className="p-4 h-full overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Math Game Settings</h2>
           <button

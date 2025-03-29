@@ -22,6 +22,7 @@ const MathOperationsGame = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [operation, setOperation] = useState("addition"); // addition, subtraction, multiplication, division
   const [difficulty, setDifficulty] = useState("medium"); // easy, medium, hard
+  const [gridSize, setGridSize] = useState({ rows: 10, cols: 10 }); // {rows, cols} - 10x1 is now 10 rows, 1 column
 
   const isInputDisabled = gameState !== "playing";
 
@@ -29,7 +30,7 @@ const MathOperationsGame = () => {
   const inputRefs = useRef({});
 
   // Generate random numbers based on operation and difficulty
-  const generateRandomNumbers = () => {
+  const generateRandomNumbers = useCallback(() => {
     const generateNumber = () => {
       let min = 10;
       let max = 99;
@@ -74,8 +75,8 @@ const MathOperationsGame = () => {
       }
     };
 
-    let rowHeaders = Array(10).fill().map(generateNumber);
-    let colHeaders = Array(10).fill().map(generateNumber);
+    let rowHeaders = Array(gridSize.rows).fill().map(generateNumber);
+    let colHeaders = Array(gridSize.cols).fill().map(generateNumber);
 
     // For division, ensure dividends are multiples of divisors
     if (operation === "division") {
@@ -89,7 +90,7 @@ const MathOperationsGame = () => {
     setNumbers({ rowHeaders, colHeaders });
     setAnswers({});
     return { rowHeaders, colHeaders };
-  };
+  }, [operation, difficulty, gridSize]);
 
   // Initialize the game
   useEffect(() => {
@@ -120,8 +121,7 @@ const MathOperationsGame = () => {
       clearInterval(timerInterval);
       setTimerInterval(null);
       setGameState("completed");
-
-      // Calculate results
+      // Calculate results (keep existing calculation logic)
       let correct = 0;
       let incorrect = 0;
       let unanswered = 0;
@@ -211,6 +211,13 @@ const MathOperationsGame = () => {
     setGameState("ready");
     generateRandomNumbers();
     setSelectedCell(null);
+    setResults({
+      correct: 0,
+      incorrect: 0,
+      unanswered: 0,
+      totalTime: 0,
+      averageTimePerAnswer: 0,
+    });
   };
 
   const newNumberSet = () => {
@@ -485,6 +492,28 @@ const MathOperationsGame = () => {
     resetGame();
   };
 
+  const changeGridSize = useCallback(
+    (newSize) => {
+      if (gameState === "playing") {
+        pauseTimer();
+      }
+      setGridSize(newSize);
+      setGameState("ready");
+      setTimer(0);
+      generateRandomNumbers();
+      setAnswers({});
+      setSelectedCell(null);
+      setResults({
+        correct: 0,
+        incorrect: 0,
+        unanswered: 0,
+        totalTime: 0,
+        averageTimePerAnswer: 0,
+      });
+    },
+    [gameState, pauseTimer, generateRandomNumbers]
+  );
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <GameSidebar
@@ -494,6 +523,8 @@ const MathOperationsGame = () => {
         changeOperation={changeOperation}
         difficulty={difficulty}
         changeDifficulty={changeDifficulty}
+        gridSize={gridSize}
+        changeGridSize={changeGridSize}
       />
 
       <div className="flex-grow">
@@ -506,7 +537,6 @@ const MathOperationsGame = () => {
             ≡
           </button>
         )}
-
         <div className="container mx-auto p-4 max-w-4xl mt-4">
           <h1 className="text-2xl font-bold text-center mb-4">
             Math {operation.charAt(0).toUpperCase() + operation.slice(1)}{" "}
@@ -522,6 +552,8 @@ const MathOperationsGame = () => {
             stopGame={stopGame}
             resetGame={resetGame}
             newNumberSet={newNumberSet}
+            gridSize={gridSize}
+            changeGridSize={changeGridSize}
           />
 
           <div className="text-center mb-4 text-gray-600 text-sm">
@@ -529,23 +561,51 @@ const MathOperationsGame = () => {
             totals for rows, columns, and the entire grid!
           </div>
 
-          <GameTable
-            numbers={numbers}
-            operation={operation}
-            answers={answers}
-            selectedCell={selectedCell}
-            isInputDisabled={isInputDisabled}
-            getOperatorSymbol={getOperatorSymbol}
-            isHighlighted={isHighlighted}
-            getCellStyle={getCellStyle}
-            calculateExpectedAnswer={calculateExpectedAnswer}
-            calculateRowTotal={calculateRowTotal}
-            calculateColumnTotal={calculateColumnTotal}
-            calculateGrandTotal={calculateGrandTotal}
-            handleInputChange={handleInputChange}
-            setSelectedCell={setSelectedCell}
-            inputRefs={inputRefs}
-          />
+          <div className="flex items-start gap-4">
+            <GameTable
+              numbers={numbers}
+              operation={operation}
+              answers={answers}
+              selectedCell={selectedCell}
+              isInputDisabled={isInputDisabled}
+              getOperatorSymbol={getOperatorSymbol}
+              isHighlighted={isHighlighted}
+              getCellStyle={getCellStyle}
+              calculateExpectedAnswer={calculateExpectedAnswer}
+              calculateRowTotal={calculateRowTotal}
+              calculateColumnTotal={calculateColumnTotal}
+              calculateGrandTotal={calculateGrandTotal}
+              handleInputChange={handleInputChange}
+              setSelectedCell={setSelectedCell}
+              inputRefs={inputRefs}
+            />
+            <div className="flex flex-col gap-2 mt-8">
+              <span className="text-sm font-medium">Grid Size:</span>
+              {[
+                { rows: 10, cols: 1, label: "10x1" },
+                { rows: 3, cols: 3, label: "3x3" },
+                { rows: 5, cols: 5, label: "5x5" },
+                { rows: 10, cols: 10, label: "10x10" },
+              ].map((size) => (
+                <button
+                  key={size.label}
+                  onClick={() => changeGridSize(size)}
+                  disabled={gameState === "playing"}
+                  className={`px-3 py-2 rounded text-sm ${
+                    gridSize.rows === size.rows && gridSize.cols === size.cols
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 hover:bg-gray-300"
+                  } ${
+                    gameState === "playing"
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
+                >
+                  {size.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {gameState === "completed" && (
             <ResultsSummary results={results} formatTime={formatTime} />
