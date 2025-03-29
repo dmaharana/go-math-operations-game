@@ -1,4 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import GameControls from "./GameControls";
+import GameSidebar from "./GameSidebar";
+import GameTable from "./GameTable";
+import ResultsSummary from "./ResultsSummary";
 
 const MathOperationsGame = () => {
   // State for the game
@@ -483,69 +487,16 @@ const MathOperationsGame = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div
-        className={`transition-all duration-300 ${
-          sidebarOpen ? "w-64" : "w-0"
-        } bg-gray-800 text-white overflow-hidden fixed h-full z-10 md:relative`}
-      >
-        <div className="p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">Math Game Settings</h2>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="text-gray-300 hover:text-white"
-              aria-label="Close sidebar"
-            >
-              ✕
-            </button>
-          </div>
+      <GameSidebar
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        operation={operation}
+        changeOperation={changeOperation}
+        difficulty={difficulty}
+        changeDifficulty={changeDifficulty}
+      />
 
-          <div className="mb-6">
-            <h3 className="font-semibold mb-2">Operation</h3>
-            <div className="space-y-2">
-              {["addition", "subtraction", "multiplication", "division"].map(
-                (op) => (
-                  <button
-                    key={op}
-                    onClick={() => changeOperation(op)}
-                    className={`w-full py-2 px-3 rounded text-left ${
-                      operation === op
-                        ? "bg-blue-600"
-                        : "bg-gray-700 hover:bg-gray-600"
-                    }`}
-                  >
-                    {op.charAt(0).toUpperCase() + op.slice(1)}
-                  </button>
-                )
-              )}
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <h3 className="font-semibold mb-2">Difficulty</h3>
-            <div className="space-y-2">
-              {["easy", "medium", "hard"].map((diff) => (
-                <button
-                  key={diff}
-                  onClick={() => changeDifficulty(diff)}
-                  className={`w-full py-2 px-3 rounded text-left ${
-                    difficulty === diff
-                      ? "bg-blue-600"
-                      : "bg-gray-700 hover:bg-gray-600"
-                  }`}
-                >
-                  {diff.charAt(0).toUpperCase() + diff.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
       <div className="flex-grow">
-        {/* Only show toggle button when sidebar is closed */}
         {!sidebarOpen && (
           <button
             onClick={() => setSidebarOpen(true)}
@@ -562,267 +513,42 @@ const MathOperationsGame = () => {
             Practice Game
           </h1>
 
-          {/* Timer and Controls */}
-          <div className="flex flex-wrap justify-between items-center mb-6 gap-2">
-            <div className="text-xl">
-              Timer: <span className="font-mono">{formatTime(timer)}</span>
-            </div>
-            <div className="space-x-2 flex flex-wrap gap-2">
-              <button
-                onClick={startTimer}
-                disabled={gameState === "completed" || gameState === "playing"}
-                className={`px-4 py-2 rounded ${
-                  gameState === "completed" || gameState === "playing"
-                    ? "bg-gray-300"
-                    : "bg-green-500 text-white hover:bg-green-600"
-                }`}
-              >
-                Start
-              </button>
-              <button
-                onClick={pauseTimer}
-                disabled={gameState !== "playing"}
-                className={`px-4 py-2 rounded ${
-                  gameState !== "playing"
-                    ? "bg-gray-300"
-                    : "bg-yellow-500 text-white hover:bg-yellow-600"
-                }`}
-              >
-                Pause
-              </button>
-              <button
-                onClick={stopGame}
-                disabled={gameState === "ready" || gameState === "completed"}
-                className={`px-4 py-2 rounded ${
-                  gameState === "ready" || gameState === "completed"
-                    ? "bg-gray-300"
-                    : "bg-red-500 text-white hover:bg-red-600"
-                }`}
-              >
-                Stop
-              </button>
-              <button
-                onClick={resetGame}
-                className="px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600"
-              >
-                Reset
-              </button>
-              <button
-                onClick={newNumberSet}
-                disabled={gameState === "playing"}
-                className={`px-4 py-2 rounded ${
-                  gameState === "playing"
-                    ? "bg-gray-300"
-                    : "bg-purple-500 text-white hover:bg-purple-600"
-                }`}
-                title="Generate new numbers without resetting timer"
-              >
-                New Numbers
-              </button>
-            </div>
-          </div>
+          <GameControls
+            gameState={gameState}
+            timer={timer}
+            formatTime={formatTime}
+            startTimer={startTimer}
+            pauseTimer={pauseTimer}
+            stopGame={stopGame}
+            resetGame={resetGame}
+            newNumberSet={newNumberSet}
+          />
 
           <div className="text-center mb-4 text-gray-600 text-sm">
             Use keyboard arrow keys or Tab to navigate between cells. Calculate
             totals for rows, columns, and the entire grid!
           </div>
 
-          {/* Game Table */}
-          <div className="overflow-x-auto rounded shadow">
-            <table className="w-full border-collapse bg-white">
-              <thead>
-                <tr>
-                  <th className="border p-2 bg-gray-100">
-                    <span className="inline-block p-1">
-                      {getOperatorSymbol()}
-                    </span>
-                  </th>
-                  {numbers.colHeaders.map((num, index) => (
-                    <th
-                      key={index}
-                      className={`border p-2 text-center ${
-                        isHighlighted(index, "col")
-                          ? "bg-blue-200"
-                          : "bg-gray-100"
-                      }`}
-                    >
-                      {num}
-                    </th>
-                  ))}
-                  {/* Total Column Header */}
-                  <th className="border p-2 text-center bg-gray-200 font-bold">
-                    Total
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {numbers.rowHeaders.map((rowNum, rowIndex) => (
-                  <tr key={rowIndex}>
-                    <th
-                      className={`border p-2 text-center ${
-                        isHighlighted(rowIndex, "row")
-                          ? "bg-blue-200"
-                          : "bg-gray-100"
-                      }`}
-                    >
-                      {rowNum}
-                    </th>
-                    {numbers.colHeaders.map((colNum, colIndex) => (
-                      <td
-                        key={colIndex}
-                        className={`border p-2 ${getCellStyle(
-                          `${rowIndex}-${colIndex}`,
-                          calculateExpectedAnswer(rowNum, colNum)
-                        )}`}
-                      >
-                        <input
-                          ref={(el) =>
-                            (inputRefs.current[`${rowIndex}-${colIndex}`] = el)
-                          }
-                          type="text"
-                          value={answers[`${rowIndex}-${colIndex}`] || ""}
-                          onChange={(e) =>
-                            handleInputChange(e, `${rowIndex}-${colIndex}`)
-                          }
-                          onFocus={() =>
-                            setSelectedCell({ row: rowIndex, col: colIndex })
-                          }
-                          disabled={isInputDisabled}
-                          className="w-full h-full p-1 text-center focus:outline-none bg-transparent"
-                          placeholder="?"
-                        />
-                      </td>
-                    ))}
-                    {/* Row Total Cell (now as input) */}
-                    <td
-                      className={`border p-2 ${getCellStyle(
-                        `row-total-${rowIndex}`,
-                        calculateRowTotal(rowIndex)
-                      )}`}
-                    >
-                      <input
-                        ref={(el) =>
-                          (inputRefs.current[`row-total-${rowIndex}`] = el)
-                        }
-                        type="text"
-                        value={answers[`row-total-${rowIndex}`] || ""}
-                        onChange={(e) =>
-                          handleInputChange(e, `row-total-${rowIndex}`)
-                        }
-                        onFocus={() =>
-                          setSelectedCell({
-                            row: rowIndex,
-                            col: numbers.colHeaders.length,
-                          })
-                        }
-                        disabled={isInputDisabled}
-                        className="w-full h-full p-1 text-center focus:outline-none bg-transparent font-bold"
-                        placeholder="Total?"
-                      />
-                    </td>
-                  </tr>
-                ))}
-                {/* Total Row (now as inputs) */}
-                <tr>
-                  <th className="border p-2 text-center bg-gray-200 font-bold">
-                    Total
-                  </th>
-                  {numbers.colHeaders.map((_, colIndex) => (
-                    <td
-                      key={colIndex}
-                      className={`border p-2 ${getCellStyle(
-                        `col-total-${colIndex}`,
-                        calculateColumnTotal(colIndex)
-                      )}`}
-                    >
-                      <input
-                        ref={(el) =>
-                          (inputRefs.current[`col-total-${colIndex}`] = el)
-                        }
-                        type="text"
-                        value={answers[`col-total-${colIndex}`] || ""}
-                        onChange={(e) =>
-                          handleInputChange(e, `col-total-${colIndex}`)
-                        }
-                        onFocus={() =>
-                          setSelectedCell({
-                            row: numbers.rowHeaders.length,
-                            col: colIndex,
-                          })
-                        }
-                        disabled={isInputDisabled}
-                        className="w-full h-full p-1 text-center focus:outline-none bg-transparent font-bold"
-                        placeholder="Total?"
-                      />
-                    </td>
-                  ))}
-                  {/* Grand Total Cell (now as input) */}
-                  <td
-                    className={`border p-2 ${getCellStyle(
-                      "grand-total",
-                      calculateGrandTotal()
-                    )}`}
-                  >
-                    <input
-                      ref={(el) => (inputRefs.current["grand-total"] = el)}
-                      type="text"
-                      value={answers["grand-total"] || ""}
-                      onChange={(e) => handleInputChange(e, "grand-total")}
-                      onFocus={() =>
-                        setSelectedCell({
-                          row: numbers.rowHeaders.length,
-                          col: numbers.colHeaders.length,
-                        })
-                      }
-                      disabled={gameState === "completed"}
-                      className="w-full h-full p-1 text-center focus:outline-none bg-transparent font-bold"
-                      placeholder="Grand Total?"
-                    />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <GameTable
+            numbers={numbers}
+            operation={operation}
+            answers={answers}
+            selectedCell={selectedCell}
+            isInputDisabled={isInputDisabled}
+            getOperatorSymbol={getOperatorSymbol}
+            isHighlighted={isHighlighted}
+            getCellStyle={getCellStyle}
+            calculateExpectedAnswer={calculateExpectedAnswer}
+            calculateRowTotal={calculateRowTotal}
+            calculateColumnTotal={calculateColumnTotal}
+            calculateGrandTotal={calculateGrandTotal}
+            handleInputChange={handleInputChange}
+            setSelectedCell={setSelectedCell}
+            inputRefs={inputRefs}
+          />
 
-          {/* Results Summary */}
           {gameState === "completed" && (
-            <div className="mt-6 p-4 bg-white rounded-lg shadow">
-              <h2 className="text-xl font-bold mb-2">Results Summary</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p>
-                    <span className="font-semibold">Total Time:</span>{" "}
-                    {formatTime(results.totalTime)}
-                  </p>
-                  <p>
-                    <span className="font-semibold">
-                      Average Time Per Answer:
-                    </span>{" "}
-                    {results.averageTimePerAnswer.toFixed(2)} seconds
-                  </p>
-                </div>
-                <div>
-                  <p>
-                    <span className="font-semibold text-green-600">
-                      Correct Answers:
-                    </span>{" "}
-                    {results.correct}
-                  </p>
-                  <p>
-                    <span className="font-semibold text-red-600">
-                      Incorrect Answers:
-                    </span>{" "}
-                    {results.incorrect}
-                  </p>
-                  <p>
-                    <span className="font-semibold text-gray-600">
-                      Unanswered:
-                    </span>{" "}
-                    {results.unanswered}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <ResultsSummary results={results} formatTime={formatTime} />
           )}
         </div>
       </div>
