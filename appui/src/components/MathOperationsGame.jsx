@@ -104,12 +104,14 @@ const MathOperationsGame = () => {
     return { rowHeaders, colHeaders };
   }, [operation, difficulty, gridSize]);
 
-  // Handle window resize for responsive grid size
+
+  // Handle window resize
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768 && gridSize.cols !== 1) {
+      const isMobile = window.innerWidth < 768;
+      if (isMobile && gridSize.cols > 1) {
         setGridSize({ rows: 10, cols: 1 });
-      } else if (window.innerWidth >= 768 && gridSize.cols === 1) {
+      } else if (!isMobile && gridSize.cols === 1) {
         setGridSize({ rows: 10, cols: 10 });
       }
     };
@@ -473,6 +475,7 @@ const MathOperationsGame = () => {
                 {window.innerWidth < 768 ? "Mobile: 10x1" : "Desktop: 10x10"}
               </div>
               {[
+                { rows: 10, cols: 1, label: "10x1" },
                 { rows: 3, cols: 3, label: "3x3" },
                 { rows: 5, cols: 5, label: "5x5" },
                 { rows: 10, cols: 10, label: "10x10" },
