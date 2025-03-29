@@ -31,7 +31,10 @@ const MathOperationsGame = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [operation, setOperation] = useState("addition"); // addition, subtraction, multiplication, division
   const [difficulty, setDifficulty] = useState("medium"); // easy, medium, hard
-  const [gridSize, setGridSize] = useState({ rows: 10, cols: 10 }); // {rows, cols} - 10x1 is now 10 rows, 1 column
+  const [gridSize, setGridSize] = useState(() => {
+    // Default to 10x1 for mobile, 10x10 for desktop
+    return window.innerWidth < 768 ? { rows: 10, cols: 1 } : { rows: 10, cols: 10 };
+  });
 
   const isInputDisabled = gameState !== "playing";
 
@@ -101,10 +104,24 @@ const MathOperationsGame = () => {
     return { rowHeaders, colHeaders };
   }, [operation, difficulty, gridSize]);
 
+  // Handle window resize for responsive grid size
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768 && gridSize.cols !== 1) {
+        setGridSize({ rows: 10, cols: 1 });
+      } else if (window.innerWidth >= 768 && gridSize.cols === 1) {
+        setGridSize({ rows: 10, cols: 10 });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [gridSize]);
+
   // Initialize the game
   useEffect(() => {
     generateRandomNumbers();
-  }, [operation, difficulty]);
+  }, [operation, difficulty, gridSize]);
 
   // Timer control functions
   const startTimer = () => {
@@ -452,8 +469,10 @@ const MathOperationsGame = () => {
             />
             <div className="flex flex-col gap-2 mt-8">
               <span className="text-sm font-medium">Grid Size:</span>
+              <div className="text-xs text-gray-500 mb-1">
+                {window.innerWidth < 768 ? "Mobile: 10x1" : "Desktop: 10x10"}
+              </div>
               {[
-                { rows: 10, cols: 1, label: "10x1" },
                 { rows: 3, cols: 3, label: "3x3" },
                 { rows: 5, cols: 5, label: "5x5" },
                 { rows: 10, cols: 10, label: "10x10" },

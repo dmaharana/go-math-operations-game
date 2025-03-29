@@ -10,7 +10,6 @@ const GameControls = ({
   resetGame,
   newNumberSet,
   gridSize,
-  changeGridSize,
 }) => {
   return (
     <div className="flex flex-wrap justify-between items-center mb-6 gap-2">
