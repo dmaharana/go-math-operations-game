@@ -3,6 +3,15 @@ import GameControls from "./GameControls";
 import GameSidebar from "./GameSidebar";
 import GameTable from "./GameTable";
 import ResultsSummary from "./ResultsSummary";
+import {
+  generateRandomNumbers,
+  calculateExpectedAnswer,
+  calculateRowTotal,
+  calculateColumnTotal,
+  calculateGrandTotal,
+  getOperatorSymbol
+} from "../utils/gameCalculations";
+import { formatTime, calculateResults } from "../utils/timerUtils";
 
 const MathOperationsGame = () => {
   // State for the game
@@ -121,86 +130,7 @@ const MathOperationsGame = () => {
       clearInterval(timerInterval);
       setTimerInterval(null);
       setGameState("completed");
-      // Calculate results (keep existing calculation logic)
-      let correct = 0;
-      let incorrect = 0;
-      let unanswered = 0;
-
-      // Check normal cells
-      for (let r = 0; r < numbers.rowHeaders.length; r++) {
-        for (let c = 0; c < numbers.colHeaders.length; c++) {
-          const cellId = `${r}-${c}`;
-          const expectedAnswer = calculateExpectedAnswer(
-            numbers.rowHeaders[r],
-            numbers.colHeaders[c]
-          );
-
-          if (!(cellId in answers) || answers[cellId] === "") {
-            unanswered++;
-          } else if (parseFloat(answers[cellId]) === expectedAnswer) {
-            correct++;
-          } else {
-            incorrect++;
-          }
-        }
-      }
-
-      // Check row totals
-      for (let r = 0; r < numbers.rowHeaders.length; r++) {
-        const cellId = `row-total-${r}`;
-        const expectedTotal = calculateRowTotal(r);
-
-        if (!(cellId in answers) || answers[cellId] === "") {
-          unanswered++;
-        } else if (parseFloat(answers[cellId]) === expectedTotal) {
-          correct++;
-        } else {
-          incorrect++;
-        }
-      }
-
-      // Check column totals
-      for (let c = 0; c < numbers.colHeaders.length; c++) {
-        const cellId = `col-total-${c}`;
-        const expectedTotal = calculateColumnTotal(c);
-
-        if (!(cellId in answers) || answers[cellId] === "") {
-          unanswered++;
-        } else if (parseFloat(answers[cellId]) === expectedTotal) {
-          correct++;
-        } else {
-          incorrect++;
-        }
-      }
-
-      // Check grand total
-      const grandTotalCellId = "grand-total";
-      const expectedGrandTotal = calculateGrandTotal();
-
-      if (!(grandTotalCellId in answers) || answers[grandTotalCellId] === "") {
-        unanswered++;
-      } else if (parseFloat(answers[grandTotalCellId]) === expectedGrandTotal) {
-        correct++;
-      } else {
-        incorrect++;
-      }
-
-      const totalCells =
-        numbers.rowHeaders.length * numbers.colHeaders.length +
-        numbers.rowHeaders.length +
-        numbers.colHeaders.length +
-        1;
-      const answeredCells = correct + incorrect;
-      const averageTimePerAnswer =
-        answeredCells > 0 ? timer / answeredCells : 0;
-
-      setResults({
-        correct,
-        incorrect,
-        unanswered,
-        totalTime: timer,
-        averageTimePerAnswer,
-      });
+      setResults(calculateResults(answers, numbers, operation, timer, calculateExpectedAnswer));
     }
   };
 
@@ -225,65 +155,6 @@ const MathOperationsGame = () => {
       generateRandomNumbers();
       setSelectedCell(null);
     }
-  };
-
-  // Calculate expected answer based on the operation
-  const calculateExpectedAnswer = (a, b) => {
-    switch (operation) {
-      case "addition":
-        return a + b;
-      case "subtraction":
-        return a - b;
-      case "multiplication":
-        return a * b;
-      case "division":
-        return a / b;
-      default:
-        return a + b;
-    }
-  };
-
-  // Calculate row totals
-  const calculateRowTotal = (rowIndex) => {
-    let total = 0;
-    for (let c = 0; c < numbers.colHeaders.length; c++) {
-      const cellId = `${rowIndex}-${c}`;
-      const expectedAnswer = calculateExpectedAnswer(
-        numbers.rowHeaders[rowIndex],
-        numbers.colHeaders[c]
-      );
-      total += expectedAnswer;
-    }
-    return total;
-  };
-
-  // Calculate column totals
-  const calculateColumnTotal = (colIndex) => {
-    let total = 0;
-    for (let r = 0; r < numbers.rowHeaders.length; r++) {
-      const cellId = `${r}-${colIndex}`;
-      const expectedAnswer = calculateExpectedAnswer(
-        numbers.rowHeaders[r],
-        numbers.colHeaders[colIndex]
-      );
-      total += expectedAnswer;
-    }
-    return total;
-  };
-
-  // Calculate grand total
-  const calculateGrandTotal = () => {
-    let total = 0;
-    for (let r = 0; r < numbers.rowHeaders.length; r++) {
-      for (let c = 0; c < numbers.colHeaders.length; c++) {
-        const expectedAnswer = calculateExpectedAnswer(
-          numbers.rowHeaders[r],
-          numbers.colHeaders[c]
-        );
-        total += expectedAnswer;
-      }
-    }
-    return total;
   };
 
   // Navigation functions
@@ -571,10 +442,10 @@ const MathOperationsGame = () => {
               getOperatorSymbol={getOperatorSymbol}
               isHighlighted={isHighlighted}
               getCellStyle={getCellStyle}
-              calculateExpectedAnswer={calculateExpectedAnswer}
-              calculateRowTotal={calculateRowTotal}
-              calculateColumnTotal={calculateColumnTotal}
-              calculateGrandTotal={calculateGrandTotal}
+              calculateExpectedAnswer={(a, b) => calculateExpectedAnswer(a, b, operation)}
+              calculateRowTotal={(rowIndex) => calculateRowTotal(rowIndex, numbers, operation)}
+              calculateColumnTotal={(colIndex) => calculateColumnTotal(colIndex, numbers, operation)}
+              calculateGrandTotal={() => calculateGrandTotal(numbers, operation)}
               handleInputChange={handleInputChange}
               setSelectedCell={setSelectedCell}
               inputRefs={inputRefs}
